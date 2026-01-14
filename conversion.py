@@ -20,6 +20,13 @@ NOTE_NAMES = [
     "f#", "g", "g#", "a", "a#", "b"
 ]
 
+# Modify to preference
+OCTAVE_SWITCH = [
+    '[', # Decrease OCTAVE by 1
+    ']'  # Increase OCTAVE by 1
+]
+
+# Modify to preference
 KEY_TO_NOTE = {
     pygame.K_1      : 0,  # C
     pygame.K_2      : 1,  # C#
@@ -46,14 +53,61 @@ p = Path('C:\Dev\Piano-Project\Piano-Notes')
 def note_to_path(note_index, octave):
     return p / note_to_filename(note_index, octave)
 
+def octave_switch(switch_key):
+    if switch_key == '[':
+        if OCTAVE == MIN_OCTAVE:
+            return 'Cannot lower Octave'
+        else:
+            OCTAVE -= 1
+
+    elif switch_key == ']':
+        if OCTAVE == MAX_OCTAVE:
+            return 'Canno increase Octave'
+        else:
+            OCTAVE += 1
+
+    else:
+        return "Not a recognized octave switch key"
 
 
+def play_note(key):
+    global OCTAVE
 
-def play_note(pygame_K : pygame):
+    if key not in KEY_TO_NOTE:
+        return 
+    
+    note_index = KEY_TO_NOTE[key]
+    sound = sounds.get((note_index, OCTAVE))
 
-    if pygame_K in KEY_TO_NOTE:
-        if not sound_effect.get_num_channels():
-            pass
+    # It doesn't exist
+    if sound is None:
+        return
+    
+    note_id = (note_index, OCTAVE)
+
+    channel = pygame.mixer.find_channel()
+
+    if channel is None:
+        return # no free voices
+    
+    channel.play(sound)
+    active_notes[note_id] = channel
+
+    print(f"Playing {NOTE_NAMES[note_index]}{OCTAVE}")
+
+def release_note(key):
+    if key not in KEY_TO_NOTE:
+        return
+    
+    note_index = KEY_TO_NOTE[key]
+    note_id = (note_index, OCTAVE)
+
+    channel = active_notes.pop(note_id, None)
+
+    if channel:
+        channel.fadeout(550)
+        print(f"Note: {NOTE_NAMES[note_index]} released")
+
 
 
 if __name__ == "__main__":
@@ -74,6 +128,10 @@ if __name__ == "__main__":
             if path.exists():
                 sounds[(note_index, octave)] = pygame.mixer.Sound(path)
 
+    active_notes = {}
+
+
+
     print(f"Loaded {len(sounds)} samples")
-    for k in sorted(sounds.keys())[:5]:
-        print(k, sounds[k])
+    for k in sorted(sounds.keys()):
+        print(k, note_to_filename(k[0], k[-1]))
