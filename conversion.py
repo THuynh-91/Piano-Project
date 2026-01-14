@@ -22,8 +22,8 @@ NOTE_NAMES = [
 
 # Modify to preference
 OCTAVE_SWITCH = [
-    '[', # Decrease OCTAVE by 1
-    ']'  # Increase OCTAVE by 1
+    pygame.K_LEFTBRACKET, # Decrease OCTAVE by 1
+    pygame.K_RIGHTBRACKET  # Increase OCTAVE by 1
 ]
 
 # Modify to preference
@@ -54,23 +54,27 @@ def note_to_path(note_index, octave):
     return p / note_to_filename(note_index, octave)
 
 def octave_switch(switch_key):
-    if switch_key == '[':
+    global OCTAVE
+
+    print(f'Current OCTAVE: {OCTAVE}')
+
+    if switch_key == OCTAVE_SWITCH[0]:
         if OCTAVE == MIN_OCTAVE:
-            return 'Cannot lower Octave'
+            print('Cannot lower Octave')
         else:
             OCTAVE -= 1
 
-    elif switch_key == ']':
+    elif switch_key == OCTAVE_SWITCH[-1]:
         if OCTAVE == MAX_OCTAVE:
-            return 'Canno increase Octave'
+            print('Cannot increase Octave')
         else:
             OCTAVE += 1
 
     else:
-        return "Not a recognized octave switch key"
+        print("Not a recognized octave switch key")
 
 
-def play_note(key):
+def play_note(key, sounds, active_notes):
     global OCTAVE
 
     if key not in KEY_TO_NOTE:
@@ -95,7 +99,7 @@ def play_note(key):
 
     print(f"Playing {NOTE_NAMES[note_index]}{OCTAVE}")
 
-def release_note(key):
+def release_note(key, active_notes):
     if key not in KEY_TO_NOTE:
         return
     
